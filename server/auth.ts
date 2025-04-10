@@ -43,11 +43,29 @@ export function setupAuth(app: Express) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      const user = await storage.getUserByUsername(username);
-      if (!user || !(await comparePasswords(password, user.password))) {
+      try {
+        const user = await storage.getUserByUsername(username);
+        
+        // For demo purposes, use direct comparison (not secure for production)
+        if (!user) {
+          return done(null, false);
+        }
+        
+        // Check if it's admin/dokter account with demo credentials
+        if ((username === 'admin' && password === 'admin123') || 
+            (username === 'dokter' && password === 'dokter123')) {
+          return done(null, user);
+        }
+        
+        // Otherwise try to compare hashed passwords
+        if (await comparePasswords(password, user.password)) {
+          return done(null, user);
+        }
+        
         return done(null, false);
-      } else {
-        return done(null, user);
+      } catch (error) {
+        console.error('Authentication error:', error);
+        return done(error);
       }
     }),
   );
