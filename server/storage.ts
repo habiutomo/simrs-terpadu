@@ -149,23 +149,30 @@ export class MemStorage implements IStorage {
       checkPeriod: 86400000 // one day
     });
     
-    // Create default admin user
-    this.createUser({
+    // Create default admin user with pre-hashed password
+    // Use a consistent salt/hash for demo purposes
+    const adminUser: User = {
+      id: this.userId++,
       username: "admin",
-      password: "admin123",
+      password: "5417d890182f61c0b67614542a143cc9b0526c4cf15e31d0fdb65d736e3a52d1ab38bbdb7e8adcf51b09e5e63aa58c43480e469eaa8702fdb0090bb15907dd25.cc82b02c8204efdfb46bd4aab4c2eab5",
       nama: "Administrator",
       role: "admin",
-      rumahSakit: "RSUD Harapan Bunda"
-    });
+      rumahSakit: "RSUD Harapan Bunda",
+      active: true
+    };
+    this.users.set(adminUser.id, adminUser);
     
-    // Create example doctor user
-    this.createUser({
+    // Create example doctor user with pre-hashed password
+    const doctorUser: User = {
+      id: this.userId++,
       username: "dokter",
-      password: "dokter123",
+      password: "5b8ca59f99c923887691effdfc67a108dcad5b9f6b630a4799eb008dfda7a1ba9b5fc94cd49573c26fe6bb3ae2cf8da2deafd49ee1e14b5bd29a27c9ba92d9c3.93bb484c267a9cf5f9e4f35b815904d2",
       nama: "dr. Budi Santoso",
       role: "dokter",
-      rumahSakit: "RSUD Harapan Bunda"
-    });
+      rumahSakit: "RSUD Harapan Bunda",
+      active: true
+    };
+    this.users.set(doctorUser.id, doctorUser);
   }
 
   // User methods
