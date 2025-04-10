@@ -26,9 +26,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
+    refetch,
   } = useQuery<SelectUser | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const loginMutation = useMutation({
@@ -37,11 +40,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      console.log("Login successful, user data:", user);
+      // Explicitly refetch user data from server to ensure we have the latest state
       queryClient.setQueryData(["/api/user"], user);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      // Display toast notification
       toast({
         title: "Login berhasil",
         description: `Selamat datang, ${user.nama}`,
       });
+      
+      // Force navigation to dashboard if not redirected automatically
+      setTimeout(() => {
+        if (window.location.pathname === "/auth") {
+          window.location.href = "/";
+        }
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
@@ -58,11 +73,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      console.log("Registration successful, user data:", user);
+      // Explicitly refetch user data from server to ensure we have the latest state
       queryClient.setQueryData(["/api/user"], user);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      // Display toast notification
       toast({
         title: "Registrasi berhasil",
         description: `Selamat datang, ${user.nama}`,
       });
+      
+      // Force navigation to dashboard if not redirected automatically
+      setTimeout(() => {
+        if (window.location.pathname === "/auth") {
+          window.location.href = "/";
+        }
+      }, 500);
     },
     onError: (error: Error) => {
       toast({

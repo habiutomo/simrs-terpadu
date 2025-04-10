@@ -76,10 +76,26 @@ export function setupAuth(app: Express) {
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    console.log("[AUTH] Serializing user:", user.id, user.username);
+    // Store only the user ID in the session
+    done(null, user.id);
+  });
+  
   passport.deserializeUser(async (id: number, done) => {
-    const user = await storage.getUser(id);
-    done(null, user);
+    console.log("[AUTH] Deserializing user with ID:", id);
+    try {
+      const user = await storage.getUser(id);
+      if (!user) {
+        console.log("[AUTH] User not found during deserialization");
+        return done(null, false);
+      }
+      console.log("[AUTH] User deserialized successfully:", user.username);
+      done(null, user);
+    } catch (error) {
+      console.error("[AUTH] Error deserializing user:", error);
+      done(error, null);
+    }
   });
 
   app.post("/api/register", async (req, res, next) => {
@@ -112,18 +128,50 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), async (req, res) => {
-    // Log activity
-    if (req.user) {
-      await storage.createAktivitas({
-        userId: req.user.id,
-        aktivitas: "Login",
-        keterangan: `User ${req.user.username} berhasil login`,
-        tanggal: new Date(),
-        status: "Selesai"
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err, user, info) => {
+      if (err) return next(err);
+      
+      if (!user) {
+        console.log("[AUTH] Login failed - No user found");
+        return res.status(401).json({ error: "Username atau password salah" });
+      }
+      
+      // Log the login attempt
+      console.log("[AUTH] Login attempt for user:", user.username);
+      
+      // Manually log in the user and establish session
+      req.login(user, async (loginErr) => {
+        if (loginErr) {
+          console.error("[AUTH] Login error:", loginErr);
+          return next(loginErr);
+        }
+        
+        console.log("[AUTH] Login successful for:", user.username);
+        console.log("[AUTH] Session ID after login:", req.sessionID);
+        
+        // Log activity
+        await storage.createAktivitas({
+          userId: user.id,
+          aktivitas: "Login",
+          keterangan: `User ${user.username} berhasil login`,
+          tanggal: new Date(),
+          status: "Selesai"
+        });
+        
+        // Manual regeneration of session to ensure it's saved
+        req.session.save((err) => {
+          if (err) {
+            console.error("[AUTH] Session save error:", err);
+            return next(err);
+          }
+          
+          // Return user info without password
+          const { password, ...userWithoutPassword } = user;
+          res.status(200).json(userWithoutPassword);
+        });
       });
-    }
-    res.status(200).json(req.user);
+    })(req, res, next);
   });
 
   app.post("/api/logout", async (req, res, next) => {
