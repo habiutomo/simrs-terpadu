@@ -202,8 +202,4 @@ Proyek ini dilisensikan di bawah [MIT License](LICENSE).
 
 ## Kontak
 
-Untuk pertanyaan dan dukungan, hubungi kami di [info@simrs-app.id](mailto:info@simrs-app.id).
-
----
-
-© 2023 SIMRS. Hak Cipta Dilindungi.
+habizinnia@gmail.com
