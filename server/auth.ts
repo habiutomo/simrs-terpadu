@@ -29,11 +29,17 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  console.log("[AUTH] Setting up authentication...");
+
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "simrs-secret-session-key",
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     store: storage.sessionStore,
+    cookie: {
+      maxAge: 86400000, // 24 hours
+      httpOnly: true
+    }
   };
 
   app.set("trust proxy", 1);
@@ -139,7 +145,17 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log("[AUTH] GET /api/user - isAuthenticated:", req.isAuthenticated());
+    console.log("[AUTH] Session ID:", req.sessionID);
+    console.log("[AUTH] Session:", req.session);
+    
+    // Debug user authentication
+    if (!req.isAuthenticated()) {
+      console.log("[AUTH] User not authenticated");
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    console.log("[AUTH] Authenticated user:", req.user);
     res.json(req.user);
   });
 }
