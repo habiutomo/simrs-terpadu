@@ -1,6 +1,8 @@
 # SIMRS - Sistem Informasi Manajemen Rumah Sakit
 
 ![SIMRS Logo](generated-icon.png)
+![SIMRS Logo](1.png)
+![alt text](2.png)
 
 ## Tentang SIMRS
 
